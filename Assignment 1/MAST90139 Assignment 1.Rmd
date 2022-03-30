@@ -1,0 +1,167 @@
+---
+title: "MAST90139 Assignment 1"
+author: "Haonan Zhong 867492 (Wed 14:15 Qiuyi Li)"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(warn=-1)
+```
+
+```{r}
+domviolence <- read.csv(file="domviolence.csv")
+
+# Factor all the categorical predictors before fitting an initial model
+domviolence$age=factor(domviolence$age)
+domviolence$ms=factor(domviolence$ms)
+domviolence$mmo=factor(domviolence$mmo)
+domviolence$smok=factor(domviolence$smok)
+domviolence$alc=factor(domviolence$alc)
+domviolence$falc=factor(domviolence$falc)
+domviolence$educ=factor(domviolence$educ)
+domviolence$reg=factor(domviolence$reg)
+domviolence$dv=factor(domviolence$dv)
+
+# Obtain a simple summary of the domviolence dataframe
+summary(domviolence)
+```
+
+## Question 1a
+```{r}
+# Fit an initial model that contains all the predictors
+model0 <- glm(dv ~ ., family = binomial, data = domviolence)
+
+# Compute hypothesis testing to remove non-significant predictors
+anova(model0, test = "Chi")
+```
+The above table returns a p-value of 0.115787 for $\mathtt{alcohol}$, which indicates alcohol does not have significant effect, hence we will drop this variable.
+```{r}
+model0 <- glm(dv ~ age + ms + mmo + smok + falc + educ + reg, 
+                family = binomial, data = domviolence)
+anova(model0, test = "Chi")
+```
+As depicted by the result, all the remaining terms are significant. Next, we will perform a stepwise selection using AIC to further simplify our model.
+```{r}
+model1 <- step(model0, trace = 0)
+summary(model1)
+```
+As the summary table suggests, stepwise selection has removed $\mathtt{mmo}$.
+
+## Question 1b
+```{r}
+# Convert age and educ back to numerical form
+domviolence$age <- as.integer(domviolence$age)
+domviolence$educ <- as.integer(domviolence$educ)
+model2 <- glm(dv ~ age + ms + smok + falc + educ + reg, family = binomial, domviolence)
+summary(model2)
+```
+
+```{r}
+anova(model2, model1, test='Chi')
+```
+Based on the test above, the p-value 0.09162 is greater than the significance level of 0.05. Thus, we will accept $\mathtt{model2}$, since it's not significantly different from $\mathtt{model1}$, and it's simpler than $\mathtt{model1}$ in terms of model complexity.
+
+## Question 1c
+```{r}
+model3 <- glm(dv ~ (age + ms + smok + falc + educ + reg)^2, family = binomial, domviolence)
+
+# Perform stepwise selection to simplify model 3
+suppressWarnings(model4 <- step(model3, trace = FALSE))
+summary(model4)
+```
+
+```{r}
+# Further simplify the model using Chi-square test
+anova(model4, test = "Chi")
+```
+We will first remove the intetaction term between $\mathtt{smok}$ and $\mathtt{falc}$, given it's p-value is larger than the significance level of 0.05.
+
+```{r}
+model4 <- glm(dv ~ age + ms + smok + falc + educ + reg + ms:falc + educ:reg,
+              family = binomial, data = domviolence)
+anova(model4, test = "Chi")
+```
+Again, we will remove interaction between $\mathtt{educ}$ and $\mathtt{reg}$, given it's high p-value.
+
+```{r}
+model4 <- glm(dv ~  ms + age + smok + falc + educ + reg + ms:falc,
+              family = binomial, data = domviolence)
+anova(model4, test = "Chi")
+```
+Finally, as the table suggests, all the remaining terms are relevant. A summary table of the final model is printed below.
+
+```{r}
+summary(model4)
+```
+Therefore, the "best" model is of the form: \newline
+
+$\begin{aligned}
+logit(\theta) &= 0.79898 + 0.79651\times \mathtt{ms.2} + 0.43946\times \mathtt{ms.3} + 1.31189\times \mathtt{ms.4} + 0.48817\times \mathtt{ms.5} \\
+& + 0.14320\times \mathtt{ms.6} + 0.53324\times \mathtt{smok.1} + 0.52629\times \mathtt{falc.1} - 0.90821\times \mathtt{reg.2} + 0.02792\times \mathtt{reg.3} \\
+& - 0.42353\times \mathtt{reg.4} - 0.34707\times \mathtt{age} - 0.49007\times \mathtt{educ} - 1.78134\times \mathtt{ms.2:falc.1} + 0.32013\times \mathtt{ms.3:falc.1} \\
+& + 0.24874\times \mathtt{ms.4:falc.1} + 0.59486\times \mathtt{ms.5:falc.1} + 0.11761\times \mathtt{ms.6:falc.1}
+\end{aligned}$
+
+\newpage
+## Question 2 Odds ratio calculation and interpretation
+
+<!-- ## Sample calculation for odds ratio: -->
+<!-- When ms = 1, falc = 1: -->
+<!-- $\beta_0+\beta_7$\newline -->
+<!-- When ms = 6, falc = 1: -->
+<!-- $\beta_0+\beta_5+\beta_7+\beta_{17}$\newline -->
+<!-- Therefore, for ms = 6 vs. ms = 1 and falc = 1:\newline -->
+<!-- Log odds = $\beta_5+\beta_{17}$\newline -->
+<!-- Odds ratio = $e^{\beta_5+\beta_{17}}$ = $e^{0.14320+0.11761}$ = 1.2980\newline -->
+
+$\textbf{Marital Status:}$
+
+| OR at various levels of $\mathtt{falc}$ | $\mathtt{falc=0}$ | $\mathtt{falc=1}$ |
+| :----: | :----: | :----: |
+| $\mathtt{ms=1\:vs.\:ms=1 }$| 1 | 1 |
+| $\mathtt{ms=2\:vs.\:ms=1 }$| $e^{0.79651}=2.2178$ | $e^{0.79651-1.78134}=0.3735$ |
+| $\mathtt{ms=3\:vs.\:ms=1 }$| $e^{0.43946}=1.5519$ | $e^{0.43946+0.32013}=2.1374$ |
+| $\mathtt{ms=4\:vs.\:ms=1 }$| $e^{1.31189}=3.7132$ | $e^{1.31189+0.24874}=4.7618$ |
+| $\mathtt{ms=5\:vs.\:ms=1 }$| $e^{0.48817}=1.6293$ | $e^{0.48817+0.59486}=2.9536$ |
+| $\mathtt{ms=6\:vs.\:ms=1 }$| $e^{0.14320}=1.1540$ | $e^{0.14320+0.11761}=1.2980$ |
+
+($\mathtt{falc=0,\:ms=6\:vs.\:ms=1}$) When there were no concern caused by family member's use of alcohol during childhood. The estimated odds of a never married woman to respond positively about domestic violence or mental abuse experienced during the previous 12 months is 15.40% more than a married woman. (OR = 1.1540)
+
+($\mathtt{falc=1,\:ms=6\:vs.\:ms=1}$) On the other hand, if there were concern caused by family member's use of alcohol when grow up. The estimated odds ratio of responding positively for a never married woman is 29.80% higher compared to a married woman. (OR = 1.2980)
+
+$\textbf{Smoking:}$ Odds ratio = $e^{\beta_{6}} = e^{0.53324} = 1.7044$\newline
+The estimated odds of a non-smoking woman ($\mathtt{smok=1}$) are 70.44% more likely to respond positively about physical domestic violence or mental abuse experienced during the previous 12 month compared to a smoking woman ($\mathtt{smok=0}$).
+
+$\textbf{Family alcohol:}$
+
+| OR at various $\mathtt{ms\:levels}$ | $\mathtt{falc=0\:vs.\:falc=0 }$ | $\mathtt{falc=1\:vs.\:falc=0 }$ |
+| :-: | :-: | :--: |
+| $\mathtt{ms=1}$| 1 | $e^{0.52629}=1.6926$ |
+| $\mathtt{ms=2}$| 1 | $e^{0.52629-1.78134}=0.2851$ |
+| $\mathtt{ms=3}$| 1 | $e^{0.52629+0.32013}=2.3313$ |
+| $\mathtt{ms=4}$| 1 | $e^{0.52629+0.24874}=2.1707$ |
+| $\mathtt{ms=5}$| 1 | $e^{0.52629+0.59486}=3.0684$ |
+| $\mathtt{ms=6}$| 1 | $e^{0.52629+0.11761}=1.9040$ |
+
+($\mathtt{ms=5,\:falc=1\:vs.\:falc=0}$) The odds of a widowed woman to respond positively about physical domestic violence or mental abuse experienced during the previous 12 months, who has concern over family member's alcohol abuse when grow up, is three times (OR = 3.0684) higher than a widowed woman who has no concern.
+
+($\mathtt{ms=1,\:falc=1\:vs.\:falc=0}$) Whilst a married woman who has concern over family's alcohol abuse during childhood is 69.26% more likely to respond positively to questions about physical domestic violence or mental abuse experienced during the previous 12 months compared to a married woman who has no concern caused. (OR = 1.6926)
+
+$\textbf{Region:}$ 
+
+|  | $\mathtt{north}$ | $\mathtt{east}$ | $\mathtt{south}$ | $\mathtt{west}$ |
+| :------: | :-: | :---: | :---: | :---: |
+| OR for each region vs. $\mathtt{north}$ | 1 | $e^{-0.90821}=0.4032$ | $e^{0.02792}=1.0283$ | $e^{-0.42353}=0.6547$ |
+
+($\mathtt{south\:vs.\:north}$) The estimated odds of a woman from the south region to respond positively about physical domestic violence or mental abuse experienced during the previous 12 months is almost the same as a woman from the north region. (OR = 1.0283)
+
+($\mathtt{east\:vs.\:north}$) Contrarily, the estimated odds of a woman from the east region to respond positively about physical domestic violence or mental abuse experienced during the previous 12 months is 59.67% less than a woman from the north region. (OR = 0.4032)
+
+$\textbf{Age: }$ $e^{\beta_{11}} = e^{-0.34707} = 0.7068$\newline
+For every increase in age, the estimated odds of a woman responding positively about physical domestic violence or mental abuse experienced during the previous 12 month decreased by 29.32%.
+
+$\textbf{Education: }$ $e^{\beta_{12}} = e^{-0.49007} = 0.6126$\newline
+For every increase in the number of years in formal education, the estimated odds of a woman responding positively about physical domestic violence or mental abuse experienced during the previous 12 month decreased by 38.74%.
