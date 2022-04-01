@@ -161,7 +161,7 @@ $\textbf{Region:}$
 ($\mathtt{east\:vs.\:north}$) Contrarily, the estimated odds of a woman from the east region to respond positively about physical domestic violence or mental abuse experienced during the previous 12 months is 59.67% less than a woman from the north region. (OR = 0.4032)
 
 $\textbf{Age: }$ $e^{\beta_{11}} = e^{-0.34707} = 0.7068$\newline
-For every increase in age, the estimated odds of a woman responding positively about physical domestic violence or mental abuse experienced during the previous 12 month decreased by 29.32%.
+For every one unit increase in age, the estimated odds of a woman responding positively about physical domestic violence or mental abuse experienced during the previous 12 month decreased by 29.32%.
 
 $\textbf{Education: }$ $e^{\beta_{12}} = e^{-0.49007} = 0.6126$\newline
-For every increase in the number of years in formal education, the estimated odds of a woman responding positively about physical domestic violence or mental abuse experienced during the previous 12 month decreased by 38.74%.
+For every one unit increase in the number of years in formal education, the estimated odds of a woman responding positively about physical domestic violence or mental abuse experienced during the previous 12 month decreased by 38.74%.
