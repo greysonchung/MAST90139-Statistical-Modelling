@@ -1,0 +1,57 @@
+---
+title: "MAST90139 Assignment 2"
+author: "Haonan Zhong"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1a
+```{r}
+x <- c(1.69, 1.72, 1.76, 1.78, 1.81, 1.84, 1.86, 1.88)
+n <- c(59, 60, 62, 56, 63, 59, 62, 60)
+y <- c(6, 13, 18, 28, 52, 53, 61, 60)
+
+## Compute the empirical logit
+emp.logit <- log((y + 0.5)/(n - y + 0.5))
+par(mar=c(4,4,1,1))
+plot(x, emp.logit, xlab = 'Dosage', ylab = 'Empirical logits')
+```
+We can see there's a somewhat linear trend presented in the plot.
+
+## Question 1b
+```{r}
+logistic <- glm(y/n ~ x, family = binomial, weights = n)
+summary(logistic)$coef
+```
+The estimate for the intercept is -60.10328, and the slope is 33.93416.
+
+## Question 1c
+```{r}
+confint(logistic)
+```
+The 95% confidence interval for the slope is (28.54467, 39.96005).
+
+## Question 1d
+Given that $logit(0.5) = \frac{0.5}{1-0.5} = 0$.
+\[-60.1033 + 33.9341\times dosage = 0\]
+Solving the above equation yields dosage = 1.7712. Therefore, the estimate of the dosage that will kill 50% of the beetles is 1.7712.
+
+## Question 1e
+```{r}
+# Compute the odds ratio
+beta1 <- summary(logistic)$coef[2]
+(odds <- exp(0.1 * beta1))
+```
+The estimated odds of being killed for a 0.1 increase in dosage is 29.76749.
+```{r}
+exp(0.1*confint(logistic)[2,])
+```
+And the 95% confidence interval for the odds ratio is (17.36518, 54.38045).
+
+## Question 1f
+```{r}
+
+```
