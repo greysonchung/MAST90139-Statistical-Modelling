@@ -91,4 +91,20 @@ quad.logistic <- glm(y/n ~ x + I(x^2), family = binomial, weight = n)
 # Performing likelihood ratio test between straight line model and quadratic logistic model
 anova(logistic, quad.logistic, test = "LRT")
 ```
-Given the p-value is 0.0035, which is less than the significance level of 0.05, the quadratic term is relevant. Therefore, we claim that the quadratic model provides a better fit.
+Given the p-value is 0.0035, which is less than the significance level of 0.05, the quadratic term is relevant. Therefore, we claim that the quadratic model provides a better fit. \newpage
+
+## Question 2a
+```{r}
+educ <- rep(6:17, 2)
+agree <- c(25, 27, 75, 29, 32, 36, 115, 31, 28, 9, 15, 3, 17, 26, 91, 30, 55, 50, 190, 17, 18, 7, 13, 3)
+disagree <- c(9, 15, 49, 29, 45, 59, 245, 70, 79, 23, 110, 29, 5, 16, 36, 35, 67, 62, 403, 92, 81, 34,
+              115, 28)
+total <- agree + disagree
+gender <- c(rep(1, 12), rep(0, 12))
+```
+
+```{r}
+add.logistic <- glm(agree/total ~ factor(educ) + factor(gender), family = binomial, weight = total)
+summary(add.logistic)$coef
+```
+
