@@ -53,5 +53,42 @@ And the 95% confidence interval for the odds ratio is (17.36518, 54.38045).
 
 ## Question 1f
 ```{r}
-
+etahat <- summary(logistic)$coef[1] + summary(logistic)$coef[2] * 1.8
+(probability <- exp(etahat)/(1 + exp(etahat)))
 ```
+```{r}
+X.pred <- matrix(c(1, 1.8), nrow = 1, ncol = 2)
+se <- sqrt(X.pred %*% summary(logistic)$cov.scaled %*% t(X.pred))
+eta_l <- etahat - 1.96 * se
+eta_r <- etahat + 1.96 * se
+c(exp(eta_l)/(1 + exp(eta_l)), exp(eta_r)/(1 + exp(eta_r)))
+```
+Therefore is estimated probability is 0.7268, and the 95% confidence interval is (0.6671042, 0.7792529).
+
+## Question 1g
+```{r}
+# Testing using residual deviance
+(p_value <- 1 - pchisq(deviance(logistic), df.residual(logistic)))
+```
+Given the p-value is 0.03401062, which is less than the significance level of 0.05. Therefore, we reject the null hypothesis, the model is not adequate.
+```{r}
+# Testing using Pearson Chi-square test
+(p_value <- 1 - pchisq(sum(resid(logistic, type = 'pearson')^2), df.residual(logistic)))
+```
+In the case of using Pearson $\chi^2$ test, the p-value is 0.05948877, which is slightly above the significance level of 0.05. Therefore, we claim the model is adequate.
+
+## Question 1h
+```{r}
+par(mar=c(4,4,1,1))
+plot(x, resid(logistic, type = 'deviance'), xlab = 'X', ylab = 'Deviance residuals')
+```
+No evidence of a pattern can be seen from the plot, range of deviance residuals are bounded between -2 and 2.
+
+## Question 1i
+```{r}
+quad.logistic <- glm(y/n ~ x + I(x^2), family = binomial, weight = n)
+
+# Performing likelihood ratio test between straight line model and quadratic logistic model
+anova(logistic, quad.logistic, test = "LRT")
+```
+Given the p-value is 0.0035, which is less than the significance level of 0.05, the quadratic term is relevant. Therefore, we claim that the quadratic model provides a better fit.
