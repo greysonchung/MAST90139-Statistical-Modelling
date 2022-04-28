@@ -96,15 +96,157 @@ Given the p-value is 0.0035, which is less than the significance level of 0.05, 
 ## Question 2a
 ```{r}
 educ <- rep(6:17, 2)
-agree <- c(25, 27, 75, 29, 32, 36, 115, 31, 28, 9, 15, 3, 17, 26, 91, 30, 55, 50, 190, 17, 18, 7, 13, 3)
-disagree <- c(9, 15, 49, 29, 45, 59, 245, 70, 79, 23, 110, 29, 5, 16, 36, 35, 67, 62, 403, 92, 81, 34,
-              115, 28)
+agree <- c(25, 27, 75, 29, 32, 36, 115, 31, 28, 9, 15, 3, 
+           17, 26, 91, 30, 55, 50, 190, 17, 18, 7, 13, 3)
+disagree <- c(9, 15, 49, 29, 45, 59, 245, 70, 79, 23, 110, 29, 
+              5, 16, 36, 35, 67, 62, 403, 92, 81, 34, 115, 28)
 total <- agree + disagree
 gender <- c(rep(1, 12), rep(0, 12))
 ```
 
 ```{r}
-add.logistic <- glm(agree/total ~ factor(educ) + factor(gender), family = binomial, weight = total)
-summary(add.logistic)$coef
+add.logistic <- glm(agree/total ~ factor(educ) + factor(gender), 
+                    family = binomial, weight = total)
+anova(add.logistic, test = 'Chi')
 ```
+As we can see from the result, when educ is first included in the model, adding gender is not that significant
+
+```{r}
+add.logistic <- glm(agree/total ~ factor(gender) + factor(educ), 
+                    family = binomial, weight = total)
+anova(add.logistic, test = 'Chi')
+```
+Again, after swapping the order of the predictors, still produces the same result. Thus, their effects are not strictly addictive.
+
+## Question 2b
+```{r}
+logistic0 <- glm(agree/total ~ educ * factor(gender), 
+                 family = binomial, weight = total)
+anova(logistic0, test = 'Chi')
+```
+Given the high p-value of gender, indicates that gender is not that relevant when educ is included in the model, and in the previous question suggests, gender is also not relevant by itself. Therefore we will remove gender. However, to remove gender, we must first remove the interaction term as well. Therefore, we will use educ as the only predictor.
+
+```{r}
+logistic <- glm(agree/total ~ educ, family = binomial, weight = total)
+summary(logistic)$coef
+```
+Therefore, for every one level increased in years of education, the estimated odds of the respondent agreeing to the statement decreased by $1-e^{-0.3029687}=26.14$%.
+
+## Question 2c
+From part a and b, we discovered that educ is the only relevant term in the model. The only issue is whether to treat it as a factor or not. 
+```{r}
+modelEdu <- glm(agree/total ~ educ, family = binomial, weights = total)
+pchisq(deviance(modelEdu), df = df.residual(modelEdu), lower.tail = F)
+
+modelEdu.F <- glm(agree/total ~ factor(educ), family = binomial, weights = total)
+pchisq(deviance(modelEdu.F), df = df.residual(modelEdu.F), lower.tail = F)
+```
+Both p-value are greater than 0.05, thus both model is adequate. Next we will have a look at the deviance matrix of both model.
+
+```{r}
+matrix(resid(modelEdu.F, type="deviance"), nrow = 24, ncol = 1)
+```
+All of the deviance are quite consistent within the range of [-2, 2], no major influential point.
+```{r}
+matrix(resid(modelEdu, type="deviance"), nrow = 24, ncol = 1)
+```
+Most of the deviance are within the range between -2 and 2, except for the data in row 15th and 20th. We will have a look at their effects.
+```{r}
+group <- c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0)
+modelEduc.G <- glm(agree/total ~ group, family = binomial, weights = total)
+anova(modelEduc.G, test="Chi")
+```
+Given the p-value is small, we can conclude that "Group" is highly significant.
+
+## Question 3a
+## Hypothesis 1
+```{r}
+defendant_race <- factor(c(1, 1, 2, 2, 1, 1, 2, 2))
+victim_race <- factor(c(1, 2, 1, 2, 1, 2, 1, 2))
+death_penalty <- factor(c(1, 1, 1, 1, 2, 2, 2, 2))
+freq <- c(19, 0, 11, 6, 132, 9, 52, 97)
+data <- data.frame(cbind(defendant_race, victim_race, death_penalty, freq))
+
+log_linear <- glm(freq ~ defendant_race + victim_race + death_penalty,
+                  family = poisson, data = data)
+pchisq(deviance(log_linear), df = df.residual(log_linear), lower.tail = F)
+```
+As we can see, the p-value is smaller than 0.05. Therefore, the model is not adequate and the three factors are not mutually independent.
+
+## Hypothesis 2
+```{r}
+log_linear <- glm(freq ~ death_penalty + defendant_race * victim_race, 
+                  family = poisson, data = data)
+pchisq(deviance(log_linear), df = df.residual(log_linear), lower.tail = F)
+```
+Given the p-value 0.0434 is smaller than the significance level of 0.05. Therefore, the model is not adequate. Thus, sentence is not independent of both the defendant's and the victim's race.
+
+## Hypothesis 3
+```{r}
+log_linear <- glm(freq ~ defendant_race * death_penalty + defendant_race * victim_race, 
+                  family = poisson, data = data)
+pchisq(deviance(log_linear), df = df.residual(log_linear), lower.tail = F)
+```
+As the p-value is smaller than 0.05, we can conclude that the model is not adequate. And given defendant's race, sentence is not independent of the victim's race.
+
+## Hypothesis 4
+```{r}
+log_linear <- glm(freq ~ victim_race * death_penalty + defendant_race * victim_race, 
+                  family = poisson, data = data)
+pchisq(deviance(log_linear), df = df.residual(log_linear), lower.tail = F)
+```
+As we can see, the p-value is greater than 0.05, and the model is a good fit. And given the victim's race, sentence is independent of the defendant’s race.
+
+# Question 3b
+```{r}
+defendant_race <- factor(c(1, 1, 2, 2))
+victim_race <- factor(c(1, 2, 1, 2))
+sentence <- c(19, 0, 11, 6)
+total <- c(151, 9, 63, 103)
+data <- data.frame(cbind(defendant_race, victim_race, sentence, total))
+```
+
+## Hypothesis 1
+```{r}
+logistic <- glm(sentence/total ~ 1, weights = total, 
+                data = data, family = binomial)
+pchisq(deviance(logistic), df = df.residual(logistic), lower.tail = F)
+```
+Given the p-value is less than 0.05, therefore the model is not adequate, and the three factors are not mutually independent.
+
+## Hypothesis 2
+```{r}
+logistic <- glm(sentence/total ~ defendant_race, weights = total, 
+                data = data, family = binomial)
+pchisq(deviance(logistic), df = df.residual(logistic), lower.tail = F)
+```
+The p-value is less than 0.05, hence not adequate. And sentence is not independent of both the defendant’s and the victim’s race.
+
+## Hypothesis 3
+```{r}
+# when defendant's race is white
+logistic <- glm(sentence/total ~ victim_race, weights = total, 
+                data = data[c(1:2),], family = binomial)
+anova(logistic, test = "Chi")
+
+# when defendant's race is black
+logistic <- glm(sentence/total ~ victim_race, weights = total, 
+                data = data[c(3:4),], family = binomial)
+anova(logistic, test = "Chi")
+```
+As we can see, when defendant' race is black, victim's race are significant when predicting sentence. Therefore, given the defendant’s race, sentence is not independent of the victim’s race.
+
+## Hypothesis 4
+```{r}
+# when victim's race is white
+logistic <- glm(sentence/total ~ defendant_race, weights = total, 
+                data = data[c(1, 3),], family = binomial)
+anova(logistic, test = "Chi")
+
+# when victim's race is black
+logistic <- glm(sentence/total ~ defendant_race, weights = total, 
+                data = data[c(2, 4),], family = binomial)
+anova(logistic, test = "Chi")
+```
+As the anova table stated, defendant's race is not significant when predicting sentence, regardless of whether the victim's race was black or white. Therefore, hypothesis 4 holds.
 
