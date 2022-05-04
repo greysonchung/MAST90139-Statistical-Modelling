@@ -8,3 +8,4 @@ This repository contains learning materials and assignments for the subject MAST
 ## Directory
 - `Assignment 1`: contains all files related to assignment 1
 - `Assignment 2`: contains all files related to assignment 2
+- `Assignment 3`: contains all files related to assignment 3
