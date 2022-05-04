@@ -1,6 +1,6 @@
 ---
 title: "MAST90139 Assignment 2"
-author: "Haonan Zhong"
+author: "Haonan Zhong 867492 (Wed 14:15 Qiuyi Li)"
 output: pdf_document
 ---
 
@@ -18,19 +18,20 @@ y <- c(6, 13, 18, 28, 52, 53, 61, 60)
 emp.logit <- log((y + 0.5)/(n - y + 0.5))
 par(mar=c(4,4,1,1))
 plot(x, emp.logit, xlab = 'Dosage', ylab = 'Empirical logits')
+lines(c(1.69, 1.88), c(-2, 5), type = "l", col = "red")
 ```
 We can see there's a somewhat linear trend presented in the plot.
 
 ## Question 1b
 ```{r}
 logistic <- glm(y/n ~ x, family = binomial, weights = n)
-summary(logistic)$coef
+summary(logistic)
 ```
 The estimate for the intercept is -60.10328, and the slope is 33.93416.
 
 ## Question 1c
 ```{r}
-confint(logistic)
+confint(logistic)[2,]
 ```
 The 95% confidence interval for the slope is (28.54467, 39.96005).
 
@@ -107,56 +108,44 @@ gender <- c(rep(1, 12), rep(0, 12))
 ```{r}
 add.logistic <- glm(agree/total ~ factor(educ) + factor(gender), 
                     family = binomial, weight = total)
-anova(add.logistic, test = 'Chi')
+pchisq(deviance(add.logistic), df = df.residual(add.logistic), lower.tail = F)
 ```
-As we can see from the result, when educ is first included in the model, adding gender is not that significant
-
-```{r}
-add.logistic <- glm(agree/total ~ factor(gender) + factor(educ), 
-                    family = binomial, weight = total)
-anova(add.logistic, test = 'Chi')
-```
-Again, after swapping the order of the predictors, still produces the same result. Thus, their effects are not strictly addictive.
+As we can see from the result, given the p-value is higher than the significance level of 0.05, therefore our model is adequate and the effects of gender and years of education are additive on the logit scale.
 
 ## Question 2b
 ```{r}
-logistic0 <- glm(agree/total ~ educ * factor(gender), 
-                 family = binomial, weight = total)
-anova(logistic0, test = 'Chi')
+logistic.0 <- glm(agree/total ~ educ * factor(gender), family = binomial, weight = total)
+logistic.1 <- glm(agree/total ~ educ + factor(gender), family = binomial, weight = total)
+logistic.2 <- glm(agree/total ~ factor(gender), family = binomial, weight = total)
+logistic.3 <- glm(agree/total ~ educ,family = binomial, weights = total)
 ```
-Given the high p-value of gender, indicates that gender is not that relevant when educ is included in the model, and in the previous question suggests, gender is also not relevant by itself. Therefore we will remove gender. However, to remove gender, we must first remove the interaction term as well. Therefore, we will use educ as the only predictor.
 
 ```{r}
-logistic <- glm(agree/total ~ educ, family = binomial, weight = total)
-summary(logistic)$coef
+pchisq(deviance(logistic.0), df = df.residual(logistic.0), lower.tail = F)
+pchisq(deviance(logistic.1), df = df.residual(logistic.1), lower.tail = F)
+pchisq(deviance(logistic.2), df = df.residual(logistic.2), lower.tail = F)
+pchisq(deviance(logistic.3), df = df.residual(logistic.3), lower.tail = F)
+anova(logistic.1, logistic.0, test = "Chi")
+anova(logistic.3, logistic.0, test = "Chi")
+```
+Based on the chi-square goodness of fit test, the only models that provide an adequate fit to the data are $\mathbf{logistic.0}$, $\mathbf{logistic.1}$, and $\mathbf{logistic.3}$. Furthermore, we see that $\mathbf{logistic.0}$ is better than $\mathbf{logistic.1}$ based on LRT. However, $\mathbf{logistic.0}$ is not significantly better than $\mathbf{logistic.3}$, given the p-value is larger than 0.05. Hence we conclude that $\mathbf{logistic.3}$ with education as the only predictor is a better model and it is simpler as well.
+
+```{r}
+summary(logistic.3)$coef
 ```
 Therefore, for every one level increased in years of education, the estimated odds of the respondent agreeing to the statement decreased by $1-e^{-0.3029687}=26.14$%.
 
 ## Question 2c
-From part a and b, we discovered that educ is the only relevant term in the model. The only issue is whether to treat it as a factor or not. 
+From part a, we discovered that the effects of gender and years of education are additive on the logit scale. From part b, we found out that the model with only education is the better model. Here, we will carry out further analysis to see which model is more appropriate.
+\newline
+Given that $\mathbf{logistic.3}$ is nested inside the additive model, we will use likelihood ratio test to compare them.
 ```{r}
-modelEdu <- glm(agree/total ~ educ, family = binomial, weights = total)
-pchisq(deviance(modelEdu), df = df.residual(modelEdu), lower.tail = F)
-
-modelEdu.F <- glm(agree/total ~ factor(educ), family = binomial, weights = total)
-pchisq(deviance(modelEdu.F), df = df.residual(modelEdu.F), lower.tail = F)
+add.logistic <- glm(agree/total ~ factor(educ) + factor(gender), 
+                    family = binomial, weight = total)
+logistic.3 <- glm(agree/total ~ educ,family = binomial, weights = total)
+anova(logistic.3, add.logistic, test = "Chi")
 ```
-Both p-value are greater than 0.05, thus both model is adequate. Next we will have a look at the deviance matrix of both model.
-
-```{r}
-matrix(resid(modelEdu.F, type="deviance"), nrow = 24, ncol = 1)
-```
-All of the deviance are quite consistent within the range of [-2, 2], no major influential point.
-```{r}
-matrix(resid(modelEdu, type="deviance"), nrow = 24, ncol = 1)
-```
-Most of the deviance are within the range between -2 and 2, except for the data in row 15th and 20th. We will have a look at their effects.
-```{r}
-group <- c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0)
-modelEduc.G <- glm(agree/total ~ group, family = binomial, weights = total)
-anova(modelEduc.G, test="Chi")
-```
-Given the p-value is small, we can conclude that "Group" is highly significant.
+Despite both model provides an adequate fit to the data, here we see that treating education as a factor and include gender in the model is actually not relevant compare to treating education as a variable. Therefore, we may conclude that $\mathbf{logistic.3}$ with education as the only predictor is a more appropriate model.
 
 ## Question 3a
 ## Hypothesis 1
@@ -216,7 +205,7 @@ Given the p-value is less than 0.05, therefore the model is not adequate, and th
 
 ## Hypothesis 2
 ```{r}
-logistic <- glm(sentence/total ~ defendant_race, weights = total, 
+logistic <- glm(sentence/total ~ 1, weights = total, 
                 data = data, family = binomial)
 pchisq(deviance(logistic), df = df.residual(logistic), lower.tail = F)
 ```
@@ -224,29 +213,17 @@ The p-value is less than 0.05, hence not adequate. And sentence is not independe
 
 ## Hypothesis 3
 ```{r}
-# when defendant's race is white
-logistic <- glm(sentence/total ~ victim_race, weights = total, 
-                data = data[c(1:2),], family = binomial)
-anova(logistic, test = "Chi")
-
-# when defendant's race is black
-logistic <- glm(sentence/total ~ victim_race, weights = total, 
-                data = data[c(3:4),], family = binomial)
-anova(logistic, test = "Chi")
+logistic <- glm(sentence/total ~ defendant_race, weights = total, 
+                data = data, family = binomial)
+pchisq(deviance(logistic), df = df.residual(logistic), lower.tail = F)
 ```
-As we can see, when defendant' race is black, victim's race are significant when predicting sentence. Therefore, given the defendant’s race, sentence is not independent of the victim’s race.
+The log-linear model with interaction between defendant's race and sentence allows for an association between defendant's race and sentence, and is therefore equivalent to the logit model where the response depends only on defendant's race. As the p-value suggests, the model is not adequate. Therefore, given the defendant’s race, sentence is not independent of the victim’s race.
 
 ## Hypothesis 4
 ```{r}
-# when victim's race is white
-logistic <- glm(sentence/total ~ defendant_race, weights = total, 
-                data = data[c(1, 3),], family = binomial)
-anova(logistic, test = "Chi")
-
-# when victim's race is black
-logistic <- glm(sentence/total ~ defendant_race, weights = total, 
-                data = data[c(2, 4),], family = binomial)
-anova(logistic, test = "Chi")
+logistic <- glm(sentence/total ~ victim_race, weights = total, 
+                data = data, family = binomial)
+pchisq(deviance(logistic), df = df.residual(logistic), lower.tail = F)
 ```
-As the anova table stated, defendant's race is not significant when predicting sentence, regardless of whether the victim's race was black or white. Therefore, hypothesis 4 holds.
+The log-linear model with interaction between victim's race and sentence allows for an association between victim's race and sentence, and is therefore equivalent to the logit model where the response depends only on victim's race. As the p-value suggest, the model is adequate. Thus, hypothesis 4 holds.
 
