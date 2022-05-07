@@ -18,7 +18,7 @@ y <- c(6, 13, 18, 28, 52, 53, 61, 60)
 emp.logit <- log((y + 0.5)/(n - y + 0.5))
 par(mar=c(4,4,1,1))
 plot(x, emp.logit, xlab = 'Dosage', ylab = 'Empirical logits')
-lines(c(1.69, 1.88), c(-2, 5), type = "l", col = "red")
+abline(lm(emp.logit ~ x), col = "red")
 ```
 We can see there's a somewhat linear trend presented in the plot.
 
@@ -31,9 +31,9 @@ The estimate for the intercept is -60.10328, and the slope is 33.93416.
 
 ## Question 1c
 ```{r}
-confint(logistic)[2,]
+confint.default(logistic)[2,]
 ```
-The 95% confidence interval for the slope is (28.54467, 39.96005).
+The 95% confidence interval for the slope is (28.24465, 39.62368).
 
 ## Question 1d
 Given that $logit(0.5) = \frac{0.5}{1-0.5} = 0$.
@@ -48,9 +48,9 @@ beta1 <- summary(logistic)$coef[2]
 ```
 The estimated odds of being killed for a 0.1 increase in dosage is 29.76749.
 ```{r}
-exp(0.1*confint(logistic)[2,])
+exp(0.1*confint.default(logistic)[2,])
 ```
-And the 95% confidence interval for the odds ratio is (17.36518, 54.38045).
+And the 95% confidence interval for the odds ratio is (16.85193, 52.58169).
 
 ## Question 1f
 ```{r}
