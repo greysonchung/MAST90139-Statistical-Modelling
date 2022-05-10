@@ -1,9 +1,77 @@
 ---
 title: "MAST90139 Assignment 3"
-author: "Haonan Zhong"
+author: "Haonan Zhong 867492 (Wed 14:15 Qiuyi Li)"
 output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+### Question 1a
+The model fitted in the $\mathtt{R}$ output is a multi-categorical logistic model, which use status as the nominal categorical response variable, and year as the predictor. The response variable status with three levels follows a multinomial distribution M(371, $\boldsymbol{\pi}$), where $\boldsymbol{\pi}$ is a vector that contains probability of being in each level.
+
+The model fitted to the data is
+$$
+log\frac{P(mild)}{P(normal)} = -4.2917 + 0.0836\times year
+$$
+$$
+log\frac{P(severe)}{P(normal)} = -5.0598 + 0.1093\times year
+$$
+
+### Question 1b
+0.1093 is the coefficient for year when status = severe, therefore the intepretation is given by: for every additional year spent working at the coal face the odds of a miner's pneu-monoconiosis status is severe will be increased by a factor of $e^{0.1093}$ = 1.115497.
+
+$$
+\frac{P(severe)}{P(normal)} = e^{-5.0598 + 0.1093\times year}
+$$
+\newline
+$$
+Odds\:ratio = \frac{e^{-5.0598 + 0.1093\times 10}}{e^{-5.0598 + 0.1093\times 0}} = e^{0.1093\times 10} = 2.98321
+$$
+Therefore, the 95% confidence interval for the odds ratio of severe status versus normal status for every 10 more years spent working at the coal face is given by the following:
+$$
+(e^{10\times(1.093-1.96\times 0.0165)}, e^{10\times(1.093+1.96\times 0.0165)}) = (2.158903, 4.122254)
+$$
+
+### Question 1c
+Estimate the pneumonoconiosis status probabilities for a miner who has spent 25 years working at the coal face, using normal level as the pivot.
+$$
+\frac{P(severe)}{P(normal)} = e^{-5.0598 + 0.1093\times 25}
+$$
+\newline
+$$
+\frac{P(mild)}{P(normal)} = e^{-4.2917 + 0.0836\times 25}
+$$
+Therefore,
+$$
+P(normal) = \frac{1}{1+e^{-4.2917 + 0.0836\times 25}+e^{-5.0598 + 0.1093\times 25}}
+$$
+Hence,
+$$
+P(mild) = P(normal)\times e^{-4.2917 + 0.0836\times 25}
+$$
+$$
+P(severe) = P(normal)\times e^{-5.0598 + 0.1093\times 25}
+$$
+```{r}
+odds_mild = exp(-4.2917 + 0.0836*25)
+odds_severe = exp(-5.0598 + 0.1093*25)
+p_normal = 1/(1+odds_mild+odds_severe)
+p_mild = p_normal * odds_mild
+p_severe = p_normal * odds_severe
+cbind(p_normal, p_mild, p_severe)
+```
+Therefore, the probability of normal, mild and severe is 0.8276955, 0.0915555 and 0.08074898 respectively. And given they sum up to one, which means our estimates are valid.
+
+### Question 2a
+
+
+
+
+
+
+
+
+
+
