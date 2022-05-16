@@ -57,14 +57,63 @@ $$
 ```{r}
 odds_mild = exp(-4.2917 + 0.0836*25)
 odds_severe = exp(-5.0598 + 0.1093*25)
-p_normal = 1/(1+odds_mild+odds_severe)
+p_normal = 1/(1 + odds_mild + odds_severe)
 p_mild = p_normal * odds_mild
 p_severe = p_normal * odds_severe
 cbind(p_normal, p_mild, p_severe)
 ```
-Therefore, the probability of normal, mild and severe is 0.8276955, 0.0915555 and 0.08074898 respectively. And given they sum up to one, which means our estimates are valid.
+Therefore, the probability of normal, mild and severe is 0.8276955, 0.0915555 and 0.08074898 respectively. And given they sum up to one, which means our estimated probabilities are valid.
 
 ### Question 2a
+The model fitted in question 2 is a cumulative logistic model, response variable is status as an ordinal variable and covariate is year. And the model can be written as follow
+$$
+log\frac{P(Status=Normal)}{P(Status>Normal)}=3.9558-0.0959\times year
+$$
+\newline
+$$
+log\frac{P(Status < Severe)}{P(Status = Severe)}=4.8690-0.0959\times year
+$$
+
+### Question 2b
+The interpretation of the coefficient estimate 0.0959 is given by: the odds of status moving from normal to mild/severe, or moving from normal/mild to severe increases by a factor of $e^{0.0959}$ = 1.100649 for every additional year a coal miner spent working at the coal face.
+
+$$
+\frac{P(Status=Normal)}{P(Status>Normal)} = e^{3.9558-0.0959\times year}
+$$
+$$
+\frac{P(Status>Normal)}{P(Status=Normal)}=\frac{1}{e^{3.9558-0.0959\times year}}
+$$
+$$
+Odds\:ratio=\frac{e^{3.9558-0.0959\times 0}}{e^{3.9558-0.0959\times 10}}=\frac{1}{e^{-0.0959\times 10}}=e^{0.0959\times 10}=2.6091
+$$
+The estimated odds ratio of non-normal status versus normal status for every 10 more years spent working at the coal face is 2.6091.Furthermore, the 95% confidence interval for the odds ratio of severe status versus normal status for every 10 more years spent working at the coal face is given by the following:
+$$
+(e^{10\times(0.0959 - 1.96\times 0.01194)}, e^{10\times(0.0959 + 1.96\times 0.01194)}) = (2.064682, 3.297036)
+$$
+
+### Question 2c
+Estimate the pneumonoconiosis status probabilities for a miner who has spent 25 years working at the coal face
+$$
+\frac{P(Status>Normal)}{P(Status=Normal)}=\frac{P(Mild) + P(Severe)}{P(Normal)} = \frac{1-P(Normal)}{P(Normal)} = \frac{1}{e^{3.9558 - 0.0959\times 25}}
+$$
+Solving the above equation, we have
+$$
+P(Normal) = \frac{1}{e^{3.9558 - 0.0959\times 25}+1} = 0.8261
+$$
+
+$$
+\frac{P(Status<Severe)}{P(Status=Severe)} = \frac{P(Normal)+P(Mild)}{P(Severe)} = \frac{1-P(Severe)}{P(Severe)}=\frac{1}{e^{4.8690-0.0959\times 25}}
+$$
+Solving the above equation, we have
+$$
+P(Severe) = \frac{1}{e^{4.8690-0.0959\times 25}+1} = 0.0779
+$$
+And since probability sum up to one, therefore
+$$
+P(Mild) = 1 - P(Normal) - P(Severe) = 1 - 0.8261 - 0.0779 = 0.0960
+$$
+Therefore, the estimated probability are P(Normal) = 0.8261, P(Mild) = 0.0960, and P(Severe) = 0.0779.
+
 
 
 
