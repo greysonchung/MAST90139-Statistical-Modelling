@@ -65,7 +65,7 @@ cbind(p_normal, p_mild, p_severe)
 Therefore, the probability of normal, mild and severe is 0.8276955, 0.0915555 and 0.08074898 respectively. And given they sum up to one, which means our estimated probabilities are valid.
 
 ### Question 2a
-The model fitted in question 2 is a cumulative logistic model, response variable is status as an ordinal variable and covariate is year. And the model can be written as follow
+The model fitted in question 2 is a cumulative logistic model, response variable is status as an ordinal variable and covariate is year. The response variable status follows a multinomial distribution. And the model can be written as follow
 $$
 log\frac{P(Status=Normal)}{P(Status>Normal)}=3.9558-0.0959\times year
 $$
@@ -112,15 +112,53 @@ And since probability sum up to one, therefore
 $$
 P(Mild) = 1 - P(Normal) - P(Severe) = 1 - 0.8261 - 0.0779 = 0.0960
 $$
-Therefore, the estimated probability are P(Normal) = 0.8261, P(Mild) = 0.0960, and P(Severe) = 0.0779.
+Therefore, the estimated probabilities are P(Normal) = 0.8261, P(Mild) = 0.0960, and P(Severe) = 0.0779.
 
+### Question 3a
+Let $\pi_{it}$ = P($y_{it}$ = 1 | age, smoke), t = 1,...,4, i = 1,...,537, and the model can be written as follow,
+$$
+log\frac{\hat{\pi}_{it}}{1-\hat{\pi}_{it}}=-1.880-0.113\times age+0.265\times smoke
+$$
+The mean is,
+$$
+mean = \frac{e^{-1.880-0.113\times age + 0.265\times smoke}}{1+e^{-1.880-0.113\times age + 0.265\times smoke}}
+$$
+The variance is,
+$$
+\hat{VAR}(y_{it}) = \frac{0.9985\times e^{-1.880-0.113\times age + 0.265\times smoke}}{(1+e^{-1.880-0.113\times age + 0.265\times smoke})^2}
+$$
+The correlation coefficient is,
+$$
+\hat{Corr}(y_{it},y_{is}) = 0.3543
+$$
 
+### Question 3b
+As we can see from the R output, the design matrix for data where $\mathtt{id}$ = 536 can be written as follow,
+$$
+Z(\mathtt{id}=536)=\begin{bmatrix} 1 & -2 & 1 \\ 1 & -1 & 1 \\ 1 & 0 & 1 \\ 1 & 1 & 1 \end{bmatrix}
+$$
 
+### Question 3c
+The estimated odds ratio of wheezing for a child for every one year older in age can calculated as follow,
+$$
+\hat{OR}=e^{\hat{\beta_0}}=e^{-0.113}=0.893
+$$
+And the approximate standard error of the odds ratio estimate can be calculated as follow,
+$$
+s.e.(\hat{OR}) = e^{\hat{\beta_1}}\times s.e.(\hat{\beta_1}) = e^{-0.113}\times 0.044 = 0.039
+$$
 
-
-
-
-
-
-
+### Question 3d
+The log odds ratio of wheezing for a 10-year old child with a smoking mother,
+$$
+log\frac{\hat{\pi}_{it}}{1-\hat{\pi}_{it}}=-1.880-0.113\times 1+0.265\times 1
+$$
+The log odds ratio of wheezing for a 9-year old child with a non-smoking mother
+$$
+log\frac{\hat{\pi}_{it}}{1-\hat{\pi}_{it}}=-1.880-0.113\times 0+0.265\times 0
+$$
+Thus, the odds ratio can be calculated as follow,
+$$
+\hat{OR}=\frac{e^{-1.880-0.113\times 1+0.265\times 1}}{e^{-1.880-0.113\times 0+0.265\times 0}} = e^{-0.113+0.265}=1.164
+$$
 
